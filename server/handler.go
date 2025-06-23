@@ -44,14 +44,14 @@ func HandleWS(broker *Broker, w http.ResponseWriter, r *http.Request) {
 		switch msg.Command {
 		case "SUB":
 			if msg.Topic != "" {
-				broker.Suscribe(msg.Topic, client)
+				broker.Subscribe(msg.Topic, client)
 				client.suscribed[msg.Topic] = true
 				client.SendMessage(" \t >>Server", fmt.Sprintf("Suscribed to %s", msg.Topic))
 			}
 
 		case "UNSUB":
 			if msg.Topic != "" {
-				broker.Unsuscribe(msg.Topic, client)
+				broker.Unsubscribe(msg.Topic, client)
 				delete(client.suscribed, msg.Topic)
 				client.SendMessage(" \t >>Server", fmt.Sprintf("Unsusbribed to %s", msg.Topic))
 			}
