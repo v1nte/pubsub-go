@@ -23,6 +23,17 @@ func (b *Broker) Unsubscribe(topic string, client *Client) {
 	}
 }
 
+func (b *Broker) UnsubscribeAll(client *Client) {
+	for topic, subs := range b.subscribers {
+		if subs[client] {
+			delete(subs, client)
+			if len(subs) == 0 {
+				delete(b.subscribers, topic)
+			}
+		}
+	}
+}
+
 func (b *Broker) Publish(topic string, msg string) {
 	for client := range b.subscribers[topic] {
 		client.SendMessage(topic, msg)
