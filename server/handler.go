@@ -20,6 +20,8 @@ var upgrader = websocket.Upgrader{
 
 func HandleWS(broker *Broker, w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
+
+	log.Println("New Client", r.RemoteAddr)
 	if err != nil {
 		log.Println("Upgrader:", err)
 	}
@@ -32,6 +34,7 @@ func HandleWS(broker *Broker, w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		broker.UnsubscribeAll(client)
 		conn.Close()
+		log.Println("Client disconected", r.RemoteAddr)
 	}()
 
 	for {
@@ -49,6 +52,7 @@ func HandleWS(broker *Broker, w http.ResponseWriter, r *http.Request) {
 				client.suscribed[msg.Topic] = true
 				client.SendMessage("SYSTEM", fmt.Sprintf("Suscribed to %s", msg.Topic))
 			}
+			log.Println(r.RemoteAddr, "Subscribe to -> ", msg.Topic)
 
 		case "UNSUB":
 			if msg.Topic != "" {
@@ -56,11 +60,13 @@ func HandleWS(broker *Broker, w http.ResponseWriter, r *http.Request) {
 				delete(client.suscribed, msg.Topic)
 				client.SendMessage("SYSMTE", fmt.Sprintf("Unsusbribed to %s", msg.Topic))
 			}
+			log.Println(r.RemoteAddr, "Unsubscribe to -> ", msg.Topic)
 
 		case "PUB":
 			if msg.Topic != "" && msg.Message != "" {
 				broker.Publish(msg.Topic, msg.Message)
 			}
+			log.Println(r.RemoteAddr, "Message to -> ", msg.Topic, ":", msg.Message)
 		default:
 			client.SendMessage("SYSTEM", "Use «SUB», «UNSUB», or «PUB»")
 		}
