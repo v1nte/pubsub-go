@@ -30,6 +30,7 @@ func HandleWS(broker *Broker, w http.ResponseWriter, r *http.Request) {
 	}
 
 	defer func() {
+		broker.UnsubscribeAll(client)
 		conn.Close()
 	}()
 
