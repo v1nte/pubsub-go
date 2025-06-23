@@ -46,14 +46,14 @@ func HandleWS(broker *Broker, w http.ResponseWriter, r *http.Request) {
 			if msg.Topic != "" {
 				broker.Subscribe(msg.Topic, client)
 				client.suscribed[msg.Topic] = true
-				client.SendMessage(" \t >>Server", fmt.Sprintf("Suscribed to %s", msg.Topic))
+				client.SendMessage("SYSTEM", fmt.Sprintf("Suscribed to %s", msg.Topic))
 			}
 
 		case "UNSUB":
 			if msg.Topic != "" {
 				broker.Unsubscribe(msg.Topic, client)
 				delete(client.suscribed, msg.Topic)
-				client.SendMessage(" \t >>Server", fmt.Sprintf("Unsusbribed to %s", msg.Topic))
+				client.SendMessage("SYSMTE", fmt.Sprintf("Unsusbribed to %s", msg.Topic))
 			}
 
 		case "PUB":
@@ -61,7 +61,7 @@ func HandleWS(broker *Broker, w http.ResponseWriter, r *http.Request) {
 				broker.Publish(msg.Topic, msg.Message)
 			}
 		default:
-			client.SendMessage(" \t >>Server", "Use «SUB», «UNSUB», or «PUB»")
+			client.SendMessage("SYSTEM", "Use «SUB», «UNSUB», or «PUB»")
 		}
 	}
 }
