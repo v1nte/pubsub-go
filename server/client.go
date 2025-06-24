@@ -26,6 +26,11 @@ func NewClient(conn *websocket.Conn) *Client {
 }
 
 func (c *Client) writePump() {
+	log.Println("initialize writePump for", c)
+	defer func() {
+		log.Println("close writePump for", c)
+	}()
+
 	for msg := range c.send {
 		err := c.conn.WriteJSON(map[string]string{
 			"topic":   msg.Topic,
