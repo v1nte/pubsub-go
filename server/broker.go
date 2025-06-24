@@ -1,5 +1,7 @@
 package server
 
+import "log"
+
 type Broker struct {
 	subscribers map[string]map[*Client]bool
 }
@@ -36,6 +38,10 @@ func (b *Broker) UnsubscribeAll(client *Client) {
 
 func (b *Broker) Publish(topic string, msg string) {
 	for client := range b.subscribers[topic] {
-		client.SendMessage(topic, msg)
+		select {
+		case client.send <- OutgoingMessage{Topic: topic, Message: msg}:
+		default:
+			log.Printf("Channel full, message from %s not sent", client.conn.RemoteAddr())
+		}
 	}
 }

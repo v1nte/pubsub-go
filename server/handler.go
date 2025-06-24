@@ -29,7 +29,10 @@ func HandleWS(broker *Broker, w http.ResponseWriter, r *http.Request) {
 	client := &Client{
 		conn:      conn,
 		suscribed: make(map[string]bool),
+		send:      make(chan OutgoingMessage, 256),
 	}
+
+	go client.writePump()
 
 	defer func() {
 		broker.UnsubscribeAll(client)
