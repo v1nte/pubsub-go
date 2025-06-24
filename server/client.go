@@ -25,14 +25,6 @@ func NewClient(conn *websocket.Conn) *Client {
 	}
 }
 
-func (c *Client) SendMessage(topic, msg string) {
-	response := map[string]string{
-		"topic":   topic,
-		"message": msg,
-	}
-	c.conn.WriteJSON(response)
-}
-
 func (c *Client) writePump() {
 	for msg := range c.send {
 		err := c.conn.WriteJSON(map[string]string{
