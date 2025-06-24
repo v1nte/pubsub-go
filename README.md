@@ -10,6 +10,6 @@ Implementation of Publisher and Suscribers patter in Go
 - [x] Send msg via Broker
 - [x] Handle multiples clients
 - [x] Use channels
-- [] Logs
-- [] DB connection
-- [] Auth
+- [ ] Logs
+- [ ] DB connection
+- [ ] Auth
