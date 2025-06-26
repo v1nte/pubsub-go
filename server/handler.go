@@ -20,10 +20,9 @@ var upgrader = websocket.Upgrader{
 
 func HandleWS(broker *Broker, w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
-
-	log.Println("New Client", r.RemoteAddr)
 	if err != nil {
-		log.Println("Upgrader:", err)
+		log.Println("Upgrader error:", err)
+		return
 	}
 
 	client := &Client{
@@ -33,9 +32,11 @@ func HandleWS(broker *Broker, w http.ResponseWriter, r *http.Request) {
 	}
 
 	go client.writePump()
+	log.Println("New Client", r.RemoteAddr)
 
 	defer func() {
-		broker.UnsubscribeAll(client)
+		broker.unsubscribeAll <- client
+		close(client.send)
 		conn.Close()
 		log.Println("Client disconected", r.RemoteAddr)
 	}()
@@ -50,28 +51,65 @@ func HandleWS(broker *Broker, w http.ResponseWriter, r *http.Request) {
 
 		switch msg.Command {
 		case "SUB":
-			if msg.Topic != "" {
-				broker.Subscribe(msg.Topic, client)
-				client.suscribed[msg.Topic] = true
-				client.SendMessage("SYSTEM", fmt.Sprintf("Suscribed to %s", msg.Topic))
+
+			if msg.Topic == "" {
+				client.send <- OutgoingMessage{
+					Topic:   "SYSTEM",
+					Message: "Missing Topic",
+				}
+				continue
+			}
+
+			broker.subscribeChan <- subscriptionRequest{
+				client: client,
+				topic:  msg.Topic,
+			}
+			client.suscribed[msg.Topic] = true
+			client.send <- OutgoingMessage{
+				Topic:   "SYSTEM",
+				Message: fmt.Sprintf("Subscribed to topic: %s", msg.Topic),
 			}
 			log.Println(r.RemoteAddr, "Subscribe to -> ", msg.Topic)
 
 		case "UNSUB":
-			if msg.Topic != "" {
-				broker.Unsubscribe(msg.Topic, client)
-				delete(client.suscribed, msg.Topic)
-				client.SendMessage("SYSMTE", fmt.Sprintf("Unsusbribed to %s", msg.Topic))
+			if msg.Topic == "" {
+				client.send <- OutgoingMessage{
+					Topic:   "SYSTEM",
+					Message: "Missing Topic",
+				}
+				continue
 			}
-			log.Println(r.RemoteAddr, "Unsubscribe to -> ", msg.Topic)
+
+			broker.unsubscribeChan <- unsubscriptionRequest{
+				client: client,
+				topic:  msg.Topic,
+			}
+			delete(client.suscribed, msg.Topic)
+			client.send <- OutgoingMessage{
+				Topic:   "SYSTEM",
+				Message: fmt.Sprintf("Unsubscribed from: %s", msg.Topic),
+			}
+
+			log.Println(r.RemoteAddr, "client unsubscribed from:", msg.Topic)
 
 		case "PUB":
-			if msg.Topic != "" && msg.Message != "" {
-				broker.Publish(msg.Topic, msg.Message)
+			if msg.Topic == "" || msg.Message == "" {
+				client.send <- OutgoingMessage{
+					Topic:   "System",
+					Message: "Missing Topic or Message",
+				}
+				continue
+			}
+			broker.publishChan <- publishRequests{
+				topic:   msg.Topic,
+				message: msg.Message,
 			}
 			log.Println(r.RemoteAddr, "Message to -> ", msg.Topic, ":", msg.Message)
 		default:
-			client.SendMessage("SYSTEM", "Use «SUB», «UNSUB», or «PUB»")
+			client.send <- OutgoingMessage{
+				Topic:   "SYSTEM",
+				Message: "Please. Use SUB, UNSUB, or PUB",
+			}
 		}
 	}
 }
