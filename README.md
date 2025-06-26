@@ -9,7 +9,7 @@ Implementation of Publisher and Suscribers patter in Go
 [x] Unsubscribe all
 [x] Send msg via Broker
 [x] Handle multiples clients
-[] Use channels
+[x] Use channels
 [] Logs
 [] DB connection
 [] Auth
