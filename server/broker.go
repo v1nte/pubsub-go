@@ -73,7 +73,7 @@ func (b *Broker) run() {
 			for topic, sub := range b.subscribers {
 				if sub[client] {
 					delete(sub, client)
-					if len(sub) < 0 {
+					if len(sub) == 0 {
 						delete(b.subscribers, topic)
 					}
 				}
