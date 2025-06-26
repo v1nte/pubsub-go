@@ -8,6 +8,10 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+type RegisterMsg struct {
+	Name string `json:"name"`
+}
+
 type Message struct {
 	Command string `json:"command"`
 	Topic   string `json:"topic"`
@@ -25,20 +29,32 @@ func HandleWS(broker *Broker, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var registerMsg RegisterMsg
+	err = conn.ReadJSON(&registerMsg)
+
+	if err != nil || registerMsg.Name == "" {
+		conn.WriteJSON(map[string]string{
+			"error": "You must REGISTER first",
+		})
+		conn.Close()
+		return
+	}
+
 	client := &Client{
 		conn:      conn,
+		name:      registerMsg.Name,
 		suscribed: make(map[string]bool),
 		send:      make(chan OutgoingMessage, 256),
 	}
 
 	go client.writePump()
-	log.Println("New Client", r.RemoteAddr)
+	log.Println("New Client", r.RemoteAddr, client.name)
 
 	defer func() {
 		broker.unsubscribeAll <- client
 		close(client.send)
 		conn.Close()
-		log.Println("Client disconected", r.RemoteAddr)
+		log.Println("Client disconected", client.name)
 	}()
 
 	for {

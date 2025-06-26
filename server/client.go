@@ -13,6 +13,7 @@ type OutgoingMessage struct {
 
 type Client struct {
 	conn      *websocket.Conn
+	name      string
 	suscribed map[string]bool
 	send      chan OutgoingMessage
 }
