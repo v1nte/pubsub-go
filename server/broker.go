@@ -12,7 +12,7 @@ type unsubscriptionRequest struct {
 	topic  string
 }
 
-type publishRequests struct {
+type publishRequest struct {
 	topic   string
 	message string
 }
@@ -22,7 +22,7 @@ type Broker struct {
 
 	subscribeChan   chan subscriptionRequest
 	unsubscribeChan chan unsubscriptionRequest
-	publishChan     chan publishRequests
+	publishChan     chan publishRequest
 	unsubscribeAll  chan *Client
 }
 
@@ -31,7 +31,7 @@ func NewBroker() *Broker {
 		subscribers:     make(map[string]map[*Client]bool),
 		subscribeChan:   make(chan subscriptionRequest),
 		unsubscribeChan: make(chan unsubscriptionRequest),
-		publishChan:     make(chan publishRequests),
+		publishChan:     make(chan publishRequest),
 		unsubscribeAll:  make(chan *Client),
 	}
 
