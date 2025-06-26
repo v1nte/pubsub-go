@@ -20,10 +20,9 @@ var upgrader = websocket.Upgrader{
 
 func HandleWS(broker *Broker, w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
-
-	log.Println("New Client", r.RemoteAddr)
 	if err != nil {
-		log.Println("Upgrader:", err)
+		log.Println("Upgrader error:", err)
+		return
 	}
 
 	client := &Client{
@@ -33,6 +32,7 @@ func HandleWS(broker *Broker, w http.ResponseWriter, r *http.Request) {
 	}
 
 	go client.writePump()
+	log.Println("New Client", r.RemoteAddr)
 
 	defer func() {
 		broker.UnsubscribeAll(client)
