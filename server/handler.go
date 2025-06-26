@@ -35,7 +35,8 @@ func HandleWS(broker *Broker, w http.ResponseWriter, r *http.Request) {
 	log.Println("New Client", r.RemoteAddr)
 
 	defer func() {
-		broker.UnsubscribeAll(client)
+		broker.unsubscribeAll <- client
+		close(client.send)
 		conn.Close()
 		log.Println("Client disconected", r.RemoteAddr)
 	}()
@@ -51,27 +52,47 @@ func HandleWS(broker *Broker, w http.ResponseWriter, r *http.Request) {
 		switch msg.Command {
 		case "SUB":
 			if msg.Topic != "" {
-				broker.Subscribe(msg.Topic, client)
+				broker.subscribeChan <- subscriptionRequest{
+					client: client,
+					topic:  msg.Topic,
+				}
 				client.suscribed[msg.Topic] = true
-				client.SendMessage("SYSTEM", fmt.Sprintf("Suscribed to %s", msg.Topic))
+				client.send <- OutgoingMessage{
+					Topic:   "SYSTEM",
+					Message: fmt.Sprintf("Subscribed to topic: %s", msg.Topic),
+				}
+				log.Println(r.RemoteAddr, "Subscribe to -> ", msg.Topic)
 			}
-			log.Println(r.RemoteAddr, "Subscribe to -> ", msg.Topic)
 
 		case "UNSUB":
 			if msg.Topic != "" {
-				broker.Unsubscribe(msg.Topic, client)
+				broker.unsubscribeChan <- unsubscriptionRequest{
+					client: client,
+					topic:  msg.Topic,
+				}
 				delete(client.suscribed, msg.Topic)
-				client.SendMessage("SYSMTE", fmt.Sprintf("Unsusbribed to %s", msg.Topic))
+				client.send <- OutgoingMessage{
+					Topic:   "SYSTEM",
+					Message: fmt.Sprintf("Unsubscribed from: %s", msg.Topic),
+				}
+
+				log.Println(r.RemoteAddr, "client unsubscribed from:", msg.Topic)
+
 			}
-			log.Println(r.RemoteAddr, "Unsubscribe to -> ", msg.Topic)
 
 		case "PUB":
 			if msg.Topic != "" && msg.Message != "" {
-				broker.Publish(msg.Topic, msg.Message)
+				broker.publishChan <- publishRequests{
+					topic:   msg.Topic,
+					message: msg.Message,
+				}
 			}
 			log.Println(r.RemoteAddr, "Message to -> ", msg.Topic, ":", msg.Message)
 		default:
-			client.SendMessage("SYSTEM", "Use «SUB», «UNSUB», or «PUB»")
+			client.send <- OutgoingMessage{
+				Topic:   "SYSTEM",
+				Message: "Please. Use SUB, UNSUB, or PUB",
+			}
 		}
 	}
 }
