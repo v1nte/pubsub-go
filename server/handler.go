@@ -51,41 +51,58 @@ func HandleWS(broker *Broker, w http.ResponseWriter, r *http.Request) {
 
 		switch msg.Command {
 		case "SUB":
-			if msg.Topic != "" {
-				broker.subscribeChan <- subscriptionRequest{
-					client: client,
-					topic:  msg.Topic,
-				}
-				client.suscribed[msg.Topic] = true
+
+			if msg.Topic == "" {
 				client.send <- OutgoingMessage{
 					Topic:   "SYSTEM",
-					Message: fmt.Sprintf("Subscribed to topic: %s", msg.Topic),
+					Message: "Missing Topic",
 				}
-				log.Println(r.RemoteAddr, "Subscribe to -> ", msg.Topic)
+				continue
 			}
+
+			broker.subscribeChan <- subscriptionRequest{
+				client: client,
+				topic:  msg.Topic,
+			}
+			client.suscribed[msg.Topic] = true
+			client.send <- OutgoingMessage{
+				Topic:   "SYSTEM",
+				Message: fmt.Sprintf("Subscribed to topic: %s", msg.Topic),
+			}
+			log.Println(r.RemoteAddr, "Subscribe to -> ", msg.Topic)
 
 		case "UNSUB":
-			if msg.Topic != "" {
-				broker.unsubscribeChan <- unsubscriptionRequest{
-					client: client,
-					topic:  msg.Topic,
-				}
-				delete(client.suscribed, msg.Topic)
+			if msg.Topic == "" {
 				client.send <- OutgoingMessage{
 					Topic:   "SYSTEM",
-					Message: fmt.Sprintf("Unsubscribed from: %s", msg.Topic),
+					Message: "Missing Topic",
 				}
-
-				log.Println(r.RemoteAddr, "client unsubscribed from:", msg.Topic)
-
+				continue
 			}
 
+			broker.unsubscribeChan <- unsubscriptionRequest{
+				client: client,
+				topic:  msg.Topic,
+			}
+			delete(client.suscribed, msg.Topic)
+			client.send <- OutgoingMessage{
+				Topic:   "SYSTEM",
+				Message: fmt.Sprintf("Unsubscribed from: %s", msg.Topic),
+			}
+
+			log.Println(r.RemoteAddr, "client unsubscribed from:", msg.Topic)
+
 		case "PUB":
-			if msg.Topic != "" && msg.Message != "" {
-				broker.publishChan <- publishRequests{
-					topic:   msg.Topic,
-					message: msg.Message,
+			if msg.Topic == "" || msg.Message == "" {
+				client.send <- OutgoingMessage{
+					Topic:   "System",
+					Message: "Missing Topic or Message",
 				}
+				continue
+			}
+			broker.publishChan <- publishRequests{
+				topic:   msg.Topic,
+				message: msg.Message,
 			}
 			log.Println(r.RemoteAddr, "Message to -> ", msg.Topic, ":", msg.Message)
 		default:
