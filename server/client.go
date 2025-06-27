@@ -7,6 +7,7 @@ import (
 )
 
 type OutgoingMessage struct {
+	Author  string
 	Topic   string
 	Message string
 }
@@ -21,6 +22,7 @@ type Client struct {
 func NewClient(conn *websocket.Conn) *Client {
 	return &Client{
 		conn:      conn,
+		name:      "",
 		suscribed: make(map[string]bool),
 		send:      make(chan OutgoingMessage, 256),
 	}
@@ -33,10 +35,7 @@ func (c *Client) writePump() {
 	}()
 
 	for msg := range c.send {
-		err := c.conn.WriteJSON(map[string]string{
-			"topic":   msg.Topic,
-			"message": msg.Message,
-		})
+		err := c.conn.WriteJSON(msg)
 		if err != nil {
 			log.Println("Some error in c.writePump", err)
 		}

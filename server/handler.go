@@ -117,6 +117,7 @@ func HandleWS(broker *Broker, w http.ResponseWriter, r *http.Request) {
 				continue
 			}
 			broker.publishChan <- publishRequest{
+				author:  client.name,
 				topic:   msg.Topic,
 				message: msg.Message,
 			}

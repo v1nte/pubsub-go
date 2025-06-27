@@ -13,6 +13,7 @@ type unsubscriptionRequest struct {
 }
 
 type publishRequest struct {
+	author  string
 	topic   string
 	message string
 }
@@ -61,6 +62,7 @@ func (b *Broker) run() {
 			for client := range b.subscribers[pub.topic] {
 				select {
 				case client.send <- OutgoingMessage{
+					Author:  pub.author,
 					Topic:   pub.topic,
 					Message: pub.message,
 				}:
