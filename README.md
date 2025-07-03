@@ -11,6 +11,7 @@ Implementation of Publisher and Suscribers patter in Go
 - [x] Handle multiples clients
 - [x] Include name in messages
 - [x] Use channels
+- [x] Dockerize
 - [ ] Logs
 - [ ] DB connection
 - [ ] Auth
