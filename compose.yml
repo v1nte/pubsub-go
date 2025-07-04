@@ -24,4 +24,4 @@ services:
       - 9876:9876
 
     environment:
-      MONGO_URI: mongodb://root:root@mongo27017
+      MONGO_URI: mongodb://root:root@mongo:27017
