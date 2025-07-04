@@ -11,5 +11,5 @@ type Message struct {
 	PostedAt time.Time          `json:"postedAt" bson:"posted_at"`
 	Author   string             `json:"author" bson:"author"`
 	Topic    string             `json:"topic" bson:"topic"`
-	Message  string             `json:"message" bson:"topic"`
+	Message  string             `json:"message" bson:"message"`
 }
