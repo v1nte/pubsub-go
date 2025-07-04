@@ -1,0 +1,27 @@
+services:
+  mongo:
+    image: mongo
+    container_name: mongodb
+    restart: unless-stopped
+    ports:
+      - 27017:27017
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root
+    volumes:
+      - ./db:/data/db
+
+  pubsub-go:
+    container_name: runner
+    restart: unless-stopped
+    build:
+      dockerfile: Dockerfile
+      context: .
+
+    depends_on:
+      - mongo
+    ports:
+      - 9876:9876
+
+    environment:
+      MONGO_URI: mongodb://root:root@mongo27017
