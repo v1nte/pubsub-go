@@ -1,6 +1,10 @@
 package server
 
-import "log"
+import (
+	"log"
+
+	"github.com/v1nte/pubsub-go/handlers"
+)
 
 type subscriptionRequest struct {
 	client *Client
@@ -55,10 +59,12 @@ func (b *Broker) run() {
 				if len(subs) == 0 {
 					delete(b.subscribers, unsub.topic)
 				}
-
 			}
 
 		case pub := <-b.publishChan:
+
+			go handlers.SaveMessageToDB(pub.author, pub.topic, pub.message)
+
 			for client := range b.subscribers[pub.topic] {
 				select {
 				case client.send <- OutgoingMessage{
