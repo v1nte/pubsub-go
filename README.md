@@ -13,5 +13,5 @@ Implementation of Publisher and Suscribers patter in Go
 - [x] Use channels
 - [x] Dockerize
 - [ ] Logs
-- [ ] DB connection
+- [x] DB connection
 - [ ] Auth
