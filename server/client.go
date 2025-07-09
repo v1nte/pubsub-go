@@ -1,9 +1,9 @@
 package server
 
 import (
-	"log"
-
 	"github.com/gorilla/websocket"
+	"github.com/v1nte/pubsub-go/logger"
+	"go.uber.org/zap"
 )
 
 type OutgoingMessage struct {
@@ -29,15 +29,15 @@ func NewClient(conn *websocket.Conn) *Client {
 }
 
 func (c *Client) writePump() {
-	log.Println("initialize writePump for", c)
+	logger.Log.Info("Initialize writePump for", zap.Any("Client: ", c))
 	defer func() {
-		log.Println("close writePump for", c)
+		logger.Log.Info("Close writePump for", zap.Any("Client: ", c))
 	}()
 
 	for msg := range c.send {
 		err := c.conn.WriteJSON(msg)
 		if err != nil {
-			log.Println("Some error in c.writePump", err)
+			logger.Log.Error("error in c.writePump", zap.Error(err))
 		}
 	}
 }

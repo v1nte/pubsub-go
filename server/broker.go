@@ -1,9 +1,8 @@
 package server
 
 import (
-	"log"
-
 	"github.com/v1nte/pubsub-go/handlers"
+	"github.com/v1nte/pubsub-go/logger"
 )
 
 type subscriptionRequest struct {
@@ -73,7 +72,7 @@ func (b *Broker) run() {
 					Message: pub.message,
 				}:
 				default:
-					log.Println("Channel full")
+					logger.Log.Info("Channel full")
 				}
 			}
 
