@@ -50,6 +50,6 @@ Or, send message to a topic with `PUB` command. You can send a message without b
 - [x] Include name in messages
 - [x] Use channels
 - [x] Dockerize
-- [ ] Logs
+- [x] Logs
 - [x] DB connection
 - [ ] Auth
