@@ -2,10 +2,11 @@ package server
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/gorilla/websocket"
+	"github.com/v1nte/pubsub-go/logger"
+	"go.uber.org/zap"
 )
 
 type RegisterMsg struct {
@@ -25,7 +26,7 @@ var upgrader = websocket.Upgrader{
 func HandleWS(broker *Broker, w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Println("Upgrader error:", err)
+		logger.Log.Error("Upgrader error: ", zap.Error(err))
 		return
 	}
 
@@ -48,20 +49,24 @@ func HandleWS(broker *Broker, w http.ResponseWriter, r *http.Request) {
 	}
 
 	go client.writePump()
-	log.Println("New Client", r.RemoteAddr, client.name)
+	logger.Log.Info(
+		"New Client connected",
+		zap.String("remoteAddr", r.RemoteAddr),
+		zap.String("clientName", client.name),
+	)
 
 	defer func() {
 		broker.unsubscribeAll <- client
 		close(client.send)
 		conn.Close()
-		log.Println("Client disconected", client.name)
+		logger.Log.Info("Client disconected", zap.String("clientName", client.name))
 	}()
 
 	for {
 		var msg Message
 		err := conn.ReadJSON(&msg)
 		if err != nil {
-			log.Println("read error:", err)
+			logger.Log.Error("read error", zap.Error(err))
 			continue
 		}
 
@@ -85,7 +90,10 @@ func HandleWS(broker *Broker, w http.ResponseWriter, r *http.Request) {
 				Topic:   "SYSTEM",
 				Message: fmt.Sprintf("Subscribed to topic: %s", msg.Topic),
 			}
-			log.Println(r.RemoteAddr, "Subscribe to -> ", msg.Topic)
+			logger.Log.Info("Client subscribed to topic",
+				zap.String("remoteAddr", r.RemoteAddr),
+				zap.String("topic", msg.Topic),
+			)
 
 		case "UNSUB":
 			if msg.Topic == "" {
@@ -106,7 +114,10 @@ func HandleWS(broker *Broker, w http.ResponseWriter, r *http.Request) {
 				Message: fmt.Sprintf("Unsubscribed from: %s", msg.Topic),
 			}
 
-			log.Println(r.RemoteAddr, "client unsubscribed from:", msg.Topic)
+			logger.Log.Info("Client unsubscribed from a topic",
+				zap.String("remoteAddr", r.RemoteAddr),
+				zap.String("topic", msg.Topic),
+			)
 
 		case "PUB":
 			if msg.Topic == "" || msg.Message == "" {
@@ -121,7 +132,12 @@ func HandleWS(broker *Broker, w http.ResponseWriter, r *http.Request) {
 				topic:   msg.Topic,
 				message: msg.Message,
 			}
-			log.Println(r.RemoteAddr, "Message to -> ", msg.Topic, ":", msg.Message)
+			logger.Log.Info("Client messaged to a topic ",
+				zap.String("client", r.RemoteAddr),
+				zap.String("topic", msg.Topic),
+				zap.String("message", msg.Message),
+			)
+
 		default:
 			client.send <- OutgoingMessage{
 				Topic:   "SYSTEM",

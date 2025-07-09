@@ -2,12 +2,13 @@ package handlers
 
 import (
 	"context"
-	"log"
 	"time"
 
 	"github.com/v1nte/pubsub-go/database"
+	"github.com/v1nte/pubsub-go/logger"
 	"github.com/v1nte/pubsub-go/models"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.uber.org/zap"
 )
 
 func SaveMessageToDB(author, topic, message string) {
@@ -24,9 +25,9 @@ func SaveMessageToDB(author, topic, message string) {
 
 	res, err := database.Messages.InsertOne(ctx, msg)
 	if err != nil {
-		log.Println("Failed to insert message into DB", err)
+		logger.Log.Error("Failed to insert message into DB", zap.Error(err))
 		return
 	}
 
-	log.Println("Message inserted", res.InsertedID)
+	logger.Log.Info("Message inserted", zap.Any("insertedID", res.InsertedID))
 }
