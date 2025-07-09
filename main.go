@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/v1nte/pubsub-go/database"
+	"github.com/v1nte/pubsub-go/logger"
 	"github.com/v1nte/pubsub-go/server"
 )
 
@@ -15,6 +16,14 @@ func main() {
 	}
 
 	defer database.Close()
+
+	if err := logger.Init(); err != nil {
+		log.Fatal("Logger couldn't init")
+	}
+
+	logger.Log.Info("App Started")
+	defer logger.Log.Info("App shutdown")
+	defer logger.Log.Sync()
 
 	broker := server.NewBroker()
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
