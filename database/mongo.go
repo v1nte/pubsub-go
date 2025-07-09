@@ -12,6 +12,7 @@ import (
 var (
 	client   *mongo.Client
 	Messages *mongo.Collection
+	LogsDB   *mongo.Collection
 )
 
 const (
@@ -37,6 +38,7 @@ func Init() error {
 	client = localClient
 
 	Messages = client.Database("db").Collection("messages")
+	LogsDB = client.Database("logs").Collection("appLogs")
 
 	if err = client.Database("db").RunCommand(context.TODO(), bson.D{{Key: "ping", Value: 1}}).Err(); err != nil {
 		return err
