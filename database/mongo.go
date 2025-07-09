@@ -43,6 +43,11 @@ func Init() error {
 	if err = client.Database("db").RunCommand(context.TODO(), bson.D{{Key: "ping", Value: 1}}).Err(); err != nil {
 		return err
 	}
+
+	if err = client.Database("logs").RunCommand(context.TODO(), bson.D{{Key: "ping", Value: 1}}).Err(); err != nil {
+		return err
+	}
+
 	return nil
 }
 
