@@ -2,7 +2,7 @@ FROM golang:1-alpine AS builder
 
 WORKDIR /app
 
-# Uncoment this if you really want your image to be less than ~5MiB 
+# Uncoment this if you really want your image to be less than ~5MiB
 # RUN apk add --no-cache upx  
 
 COPY go.mod go.sum ./
