@@ -2,6 +2,17 @@
 
 Implementation of Publisher and Suscribers patter in Go
 
+## How to run
+
+You can, maybe, run mongodb on your own, an then do something like `go run main.go`.
+But, I **highly recommend** you to just use docker compose as:
+
+```sh
+docker compose up
+```
+
+And you're ready to go.
+
 ## Usage
 
 ### Connect
