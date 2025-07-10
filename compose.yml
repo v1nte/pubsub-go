@@ -11,7 +11,7 @@ services:
     volumes:
       - ./db:/data/db
 
-  pubsub-go:
+  app:
     container_name: runner
     restart: unless-stopped
     build:
